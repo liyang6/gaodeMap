@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+  <title>点聚合</title>
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+  <style>
+    html,
+    body,
+    #container {
+      height: 100%;
+      width: 100%;
+    }
+
+    .input-card {
+      width: 25rem;
+    }
+
+    .input-card .btn {
+      width: 7rem;
+      margin-right: .7rem;
+    }
+
+    .input-card .btn:last-child {
+      margin-right: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container" class="map" tabindex="0"></div>
+  <div class="input-card" style="width: auto;">
+    <div class="input-item">
+      <button class="btn" onclick="heatmap.show()">显示热力图</button>
+    </div>
+    <div class="input-item">
+      <button class="btn" onclick="heatmap.hide()">关闭热力图</button>
+    </div>
+  </div>
+  <!-- <script src="//a.amap.com/jsapi_demos/static/china.js"></script> -->
+  <!-- <script src="http://a.amap.com/jsapi_demos/static/resource/heatmapData.js"></script>热力图数据 -->
+  <script type="text/javascript"
+    src="https://webapi.amap.com/maps?v=1.4.15&key=您申请的key值&plugin=AMap.MarkerClusterer"></script>
+  <script>
+    // 聚合数据
+    window.points = [
+      { lng: "113.864691", lat: "22.942327", count: 12, name: '1', cityName: "东莞" },
+      { lng: "113.370643", lat: "22.938827", count: 30, name: '2', cityName: "番禺区" },
+      { lng: "112.985037", lat: "23.15046", count: 60, name: '3', cityName: "三水区" },
+      { lng: "110.361899", lat: "20.026695", count: 130, name: '4', cityName: "海口" },
+      { lng: "121.434529", lat: "31.215641", count: 50, name: '5', cityName: "上海" },
+      { lng: "120.682502", lat: "28.011099", count: 70, name: '6', cityName: "温州" },
+      { lng: "126.687123", lat: "45.787618", count: 80, name: '7', cityName: "哈尔滨" },
+      { lng: "103.970724", lat: "30.397931", count: 90, name: '8', cityName: "成都" },
+      { lng: "117.212164", lat: "31.831641", count: 100, name: '9', cityName: "合肥" },
+      { lng: "121.411101", lat: "31.059407", count: 20, name: '10', cityName: "闵行区" },
+      { lng: "104.137953", lat: "30.784276", count: 50, name: '11', cityName: "成都" },
+      { lng: "120.499683", lat: "30.042305", count: 70, name: '12', cityName: "绍兴" },
+      { lng: "108.94686", lat: "34.362975", count: 80, name: '13', cityName: "西安" },
+      { lng: "112.873295", lat: "22.920901", count: 90, name: '14', cityName: "高明区" },
+      { lng: "113.373916", lat: "23.086728", count: 100, name: '15', cityName: "天河区" },
+      { lng: "113.250159", lat: "23.075847", count: 110, name: '16', cityName: "白鹤洞立交桥" },
+      { lng: "116.675933", lat: "39.986343", count: 300, name: '17', cityName: "通州区" },
+      { lng: "120.75997", lat: "31.734934", count: 200, name: '18', cityName: "常熟市" },
+      { lng: "118.314741", lat: "32.26999", count: 30, name: '19', cityName: "滁州" },
+      { lng: "111.723311", lat: "34.771838", count: 100, name: '20', cityName: "义马市" }
+    ]
+
+    var map = new AMap.Map("container", {
+      resizeEnable: true,
+      center: [105, 34],
+      zoom: 4
+    });
+  </script>
+  <script>
+    //热力图
+    if (!isSupportCanvas()) {
+      alert('热力图仅对支持canvas的浏览器适用,您所使用的浏览器不能使用热力图功能,请换个浏览器试试~')
+    }
+    var heatmap;
+    map.plugin(["AMap.Heatmap"], function () {
+      //初始化heatmap对象
+      heatmap = new AMap.Heatmap(map, {
+        radius: 25, //给定半径
+        opacity: [0, 0.8]
+        /*,
+        gradient:{
+            0.5: 'blue',
+            0.65: 'rgb(117,211,248)',
+            0.7: 'rgb(0, 255, 0)',
+            0.9: '#ffea00',
+            1.0: 'red'
+        }
+         */
+      });
+      //设置数据集：该数据为北京部分“公园”数据
+      heatmap.setDataSet({
+        data: points,
+        // max: 100
+      });
+    });
+
+    //判断浏览区是否支持canvas
+    function isSupportCanvas() {
+      var elem = document.createElement('canvas');
+      return !!(elem.getContext && elem.getContext('2d'));
+    }
+  </script>
+  <script type="text/javascript">
+    //点聚合
+    var cluster, markers = [];
+    // 创建一个 Icon
+    var startIcon = new AMap.Icon({
+      image: '//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+      imageSize: new AMap.Size(25, 34),
+      imageOffset: new AMap.Pixel(4, 0)
+    });
+
+    for (var i = 0; i < points.length; i += 1) {
+      markers.push(new AMap.Marker({
+        position: [points[i].lng, points[i].lat],
+        icon: startIcon,
+        label: {
+          offset: new AMap.Pixel(0, -4),  //设置文本标注偏移量
+          direction: 'top',//设置文本标注方位
+          content: `<div >${points[i].cityName}</div>`
+        }
+      }))
+    }
+
+    var count = markers.length;
+    var _renderClusterMarker = function (context) {
+      console.log('context', context, count);
+      var factor = Math.pow(context.count / count, 1 / 18);
+      var div = document.createElement('div');
+      var Hue = 180 - factor * 180;
+      var bgColor = 'hsla(' + Hue + ',100%,50%,0.7)';
+      var fontColor = 'hsla(' + Hue + ',100%,20%,1)';
+      var borderColor = 'hsla(' + Hue + ',100%,40%,1)';
+      var shadowColor = 'hsla(' + Hue + ',100%,50%,1)';
+      div.style.backgroundColor = bgColor;
+      var size = Math.round(30 + Math.pow(context.count / count, 1 / 5) * 20);
+      div.style.width = div.style.height = size + 'px';
+      div.style.border = 'solid 1px ' + borderColor;
+      div.style.borderRadius = size / 2 + 'px';
+      div.style.boxShadow = '0 0 1px ' + shadowColor;
+      div.innerHTML = context.count;
+      div.style.lineHeight = size + 'px';
+      div.style.color = fontColor;
+      div.style.fontSize = '14px';
+      div.style.textAlign = 'center';
+      context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
+      context.marker.setContent(div)
+    };
+    function addCluster(tag) {
+      /*  if (cluster) {
+         cluster.setMap(null);
+       } */
+      // if (tag == 2) {//完全自定义
+      // cluster = new AMap.MarkerClusterer(map, markers, {
+      //   gridSize: 80,
+      //   renderClusterMarker: _renderClusterMarker
+      // });
+      //  } else if (tag == 1) {//自定义图标
+      var sts = [{
+        url: "https://a.amap.com/jsapi_demos/static/images/blue.png",
+        size: new AMap.Size(32, 32),
+        offset: new AMap.Pixel(-16, -16)
+      }, {
+        url: "https://a.amap.com/jsapi_demos/static/images/green.png",
+        size: new AMap.Size(32, 32),
+        offset: new AMap.Pixel(-16, -16)
+      }, {
+        url: "https://a.amap.com/jsapi_demos/static/images/orange.png",
+        size: new AMap.Size(36, 36),
+        offset: new AMap.Pixel(-18, -18)
+      }, {
+        url: "https://a.amap.com/jsapi_demos/static/images/red.png",
+        size: new AMap.Size(48, 48),
+        offset: new AMap.Pixel(-24, -24)
+      }, {
+        url: "https://a.amap.com/jsapi_demos/static/images/darkRed.png",
+        size: new AMap.Size(48, 48),
+        offset: new AMap.Pixel(-24, -24)
+      }];
+      cluster = new AMap.MarkerClusterer(map, markers, {
+        styles: sts,
+        gridSize: 80/* ,
+        minClusterSize: 1 */
+      });
+      //  } else {//默认样式
+      //    cluster = new AMap.MarkerClusterer(map, markers, { gridSize: 80 });
+      //  }
+    }
+
+    addCluster(2);
+  </script>
+</body>
+
+</html>
